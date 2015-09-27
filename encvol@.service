@@ -1,0 +1,26 @@
+[Unit]
+Description=Encrypted volume
+After=docker.service
+Requires=docker.service
+After=encvol-env@%i.service
+Requires=encvol-env@%i.service
+
+[Service]
+TimeoutStartSec=0
+
+ExecStartPre=-/usr/bin/umount /mnt/%i
+ExecStartPre=-/usr/bin/docker stop encvol.%i.service
+ExecStartPre=-/usr/bin/docker rm encvol.%i.service
+ExecStartPre=/usr/bin/docker pull pablocouto/coreos-encvol
+
+Environment="VOLUME=%i"
+EnvironmentFile=-/dev/shm/encvol@%i.env
+ExecStartPre=/opt/encvol/bin/encvol.sh pre
+ExecStart=/opt/encvol/bin/encvol.sh run # blocks until the password is entered
+ExecStartPost=/bin/sh -c '/usr/bin/echo -e "$(/usr/bin/systemd-ask-password \
+  \"Please enter the password for encvol:$VOLUME:\")" > ${PASSWORD}'
+ExecStartPost=/opt/encvol/bin/encvol.sh mount
+
+ExecStop=/usr/bin/umount -v /mnt/%i
+ExecStop=/usr/bin/docker stop encvol.%i.service
+ExecStop=/usr/bin/docker rm encvol.%i.service

@@ -1,0 +1,10 @@
+[Unit]
+Description=One-shot generation of EnvironmentFile for encvol@.service
+
+[Service]
+Type=oneshot
+
+ExecStart=/bin/sh -c '/usr/bin/echo -e "SOCKET=$(/usr/bin/mktemp \
+  -u -p /dev/shm/ encvol.0.XXXXXX)" > /dev/shm/encvol@%i.env'
+ExecStart=/bin/sh -c '/usr/bin/echo -e "PASSWORD=$(/usr/bin/mktemp \
+  -u -p /dev/shm/ encvol.1.XXXXXX)" >> /dev/shm/encvol@%i.env'
